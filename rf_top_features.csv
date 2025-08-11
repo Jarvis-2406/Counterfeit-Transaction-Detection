@@ -1,0 +1,21 @@
+feature,importance
+quantity,0.301647192082698
+customer_history_orders,0.24299070506816553
+shipping_speed_Economy,0.11464582984876295
+unit_price,0.10875796904469852
+payment_method_Wire Transfer,0.03975692191750642
+payment_method_Cryptocurrency,0.03325004195630459
+shipping_speed_Express,0.027713172454692073
+total_amount,0.025542862370365255
+shipping_speed_Priority,0.02121971434163255
+refund_requested,0.014553398427895272
+payment_method_Apple Pay,0.012775257909742644
+shipping_speed_Standard,0.012508226592975352
+payment_method_Debit Card,0.011733591274345739
+shipping_cost,0.004838519243674868
+customer_age,0.004665366416401391
+delivery_time_days,0.0040642839193632384
+transaction_hour,0.003923713519733204
+transaction_dayofweek,0.002429718978644255
+discount_percentage,0.0019129049053824637
+payment_method_Credit Card,0.0015414534743115214
