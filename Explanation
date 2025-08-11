@@ -1,0 +1,169 @@
+AI-Powered Counterfeit Product Detection in E-Commerce
+(Fraud & Risk Analysis for Online Marketplaces)
+
+1. Project Summary
+This project builds an end-to-end machine learning pipeline to detect transactions that involve counterfeit products. The dataset is synthetic but modeled to reflect real-world e-commerce patterns: product/seller metadata, transaction details, operational metrics and risk flags.
+
+The deliverables:
+
+Data diagnostics & preprocessing
+
+Multiple predictive models (Logistic Regression, Random Forest, Gradient Boosting)
+
+Clear evaluation (confusion matrix, ROC, precision-recall)
+
+Explainability using feature importance and SHAP (sampled)
+
+Human-friendly interpretations for business stakeholders
+
+This is designed to be run in Google Colab and presented during interviews (e.g., for a Risk Specialist role at Amazon).
+
+2. Dataset (what it contains)
+Typical columns (examples from this dataset):
+
+transaction_id, customer_id — identifiers (dropped for modeling)
+
+transaction_date — timestamp of transaction
+
+customer_location — customer country (categorical)
+
+payment_method, shipping_speed, delivery_time_days — transaction details
+
+device_fingerprint_new, geolocation_mismatch, refund_requested, velocity_flag — risk flags
+
+unit_price, total_amount, quantity, shipping_cost, etc. — numeric operational attributes
+
+Target: involves_counterfeit (0 = legitimate, 1 = counterfeit)
+
+Notes
+
+The dataset mixes categorical, numeric and boolean features.
+
+Datetime fields were converted into meaningful numeric features (hour, day of week).
+
+Categorical fields are one-hot encoded for modeling.
+
+3. Data preprocessing — steps & rationale
+Drop identifiers: transaction_id, customer_id are not used as model inputs (prevent leakage & overfitting).
+
+Datetime engineering: convert transaction_date → transaction_hour, transaction_dayofweek. These give behavioral signals (time-of-day patterns, weekday vs weekend).
+
+Missing values: inspected and filled or handled (in the supplied notebook common approach used: fillna, safe defaults).
+
+Categorical encoding: One-hot encode categorical columns (e.g., payment_method, customer_location) so models can use lexical categories.
+
+Numeric coercion: ensure the final matrix is floats so model libraries and SHAP can operate without dtype errors.
+
+Train/test split: stratified split (80% train / 20% test) to preserve class distribution.
+
+Why these steps:
+
+Datetime breakdown uncovers time patterns (bots, off-hours fraud).
+
+Encoding makes categorical data usable by tree and linear models.
+
+Clean numeric input avoids runtime errors (SHAP, XGBoost).
+
+4. Models trained & why
+We trained and compared three complementary models:
+
+Logistic Regression — simple, fast, interpretable baseline. Good to show how a linear model behaves and as a fallback.
+
+Random Forest — robust, handles mixed data without much scaling, provides built-in feature importance. Good baseline for fraud detection.
+
+Gradient Boosting (sklearn) — can capture complex nonlinearities; often strong in tabular data.
+
+All models were evaluated on the same test set and compared by multiple metrics.
+
+5. Evaluation metrics — what they mean (simple)
+Accuracy — fraction of all transactions predicted correctly. Useful but misleading when fraud is rare.
+
+Precision (for fraud class) — when the model flags a transaction as “fraud”, how often is it actually fraudulent?
+Business meaning: high precision = fewer false alarms for manual review.
+
+Recall (for fraud class) — of all real fraudulent transactions, how many did the model catch?
+Business meaning: high recall = fewer missed fraud cases (lower fraud loss).
+
+F1-score — harmonic mean of precision & recall; a single number balancing both.
+
+ROC-AUC — probability that the model ranks a random fraud example higher than a random legitimate one; threshold-independent measure of discrimination.
+
+Precision-Recall & AP — more informative for imbalanced tasks like fraud (focuses on performance for the positive/fraud class).
+
+Operational trade-offs
+
+If missed fraud (false negatives) is very costly → prioritize recall (lower the decision threshold), accept more false positives.
+
+If false alarms (false positives) are costly to customers → prioritize precision (raise the threshold), accept fewer false positives.
+
+6. Key outputs & how to read them (interpretable explanations)
+Confusion matrix (counts & percentages)
+Top-left (True Negative) — legitimate transactions correctly labeled as legitimate.
+
+Top-right (False Positive) — legitimate transactions incorrectly flagged as counterfeit → causes unnecessary manual reviews, potential customer friction.
+
+Bottom-left (False Negative) — counterfeit transactions the model missed → real fraud leakage.
+
+Bottom-right (True Positive) — counterfeit transactions correctly flagged → desired outcome.
+
+Numbers & percentages help you see scale. For example:
+
+If TP = 50 (5.0%) and FN = 10 (1.0%), the model catches most frauds with low misses.
+
+Always present both counts and percentages for business context.
+
+How to interpret in interview:
+
+Identify whether the model errs more on false positives or false negatives and explain trade-offs you would choose depending on business priorities.
+
+ROC Curve
+Plots True Positive Rate (Recall) vs False Positive Rate for all thresholds.
+
+AUC value close to 1 is good: model strongly separates fraud vs legit.
+
+Use ROC to compare models; use PR/thresholds for operational decisions.
+
+Plain language:
+
+AUC = 0.90 means the model is very good at ranking fraud higher than non-fraud.
+
+Precision-Recall Curve
+Shows trade-off: as you require the model to flag more frauds (increase recall) precision usually drops.
+
+Average Precision (AP) summarizes the PR curve: better when higher.
+
+Plain language:
+
+If you want to reduce manual review load, pick a threshold with higher precision.
+
+If you want to catch nearly every fraud, pick a threshold with higher recall.
+
+Feature importance (Random Forest)
+Bar chart of features the model relied on most.
+
+Example features that often show up as important: geolocation_mismatch, delivery_time_days, device_fingerprint_new, payment_method_wire, transaction_hour, seller_rating, refund_requested.
+
+Business meaning:
+
+geolocation_mismatch high importance → many frauds involve billing vs shipping mismatch.
+
+delivery_time_days high → counterfeits may ship from far/slow origins.
+
+Use these to build rules (alerts) and prioritize manual reviews.
+
+SHAP (interpretable explanation)
+We produce a horizontal SHAP importance chart (mean |SHAP|) — this shows the average magnitude each feature contributes to moving predictions toward fraud or not-fraud.
+
+How to read a SHAP bar chart:
+
+Each bar length = average absolute impact on prediction.
+
+Percentage label on each bar = proportion of total explanation power contributed by that feature.
+
+Use SHAP to explain individual decisions in manual-review UI (e.g., “flagged because geolocation mismatch + long shipping time”).
+
+Important implementation details
+
+SHAP is computed on a sampled subset to keep runtime reasonable.
+
+For binary classification we plot the values for class 1 (fraud).
